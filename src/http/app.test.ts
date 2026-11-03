@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AppConfig } from '../config/config.js'
 import type { Logger, LogContext } from '../ports/logger.js'
+import { createTestServices } from '../testing/testServices.js'
 import { createApp } from './app.js'
 
 type Entry = { level: string; message: string; context?: LogContext }
@@ -12,12 +13,12 @@ function recordingLogger() {
   return { logger, entries }
 }
 
-const config: AppConfig = { environment: 'test', port: 3000, allowedOrigins: ['http://localhost:5173'], logLevel: 'info' }
+const config: AppConfig = { environment: 'test', port: 3000, allowedOrigins: ['http://localhost:5173'], logLevel: 'info', supabaseUrl: 'https://test.supabase.co', supabaseSecretKey: 'sb_secret_test' }
 const clock = { now: () => new Date('2026-11-03T10:00:00.000Z') }
 
 function setup() {
   const { logger, entries } = recordingLogger()
-  return { app: createApp({ config, logger, clock }), entries }
+  return { app: createApp({ config, logger, clock, services: createTestServices() }), entries }
 }
 
 describe('API HTTP del backend', () => {

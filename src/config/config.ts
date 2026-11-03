@@ -8,6 +8,10 @@ export type AppConfig = {
   port: number
   allowedOrigins: string[]
   logLevel: LogLevel
+  supabaseUrl: string
+  // Clave secreta (sb_secret_…): solo vive en el servidor. El backend escribe
+  // el progreso con ella después de aplicar las reglas del juego.
+  supabaseSecretKey: string
 }
 
 export class ConfigError extends Error {
@@ -42,6 +46,11 @@ const environmentSchema = z
     PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
     ALLOWED_ORIGINS: originList.optional(),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+    SUPABASE_URL: z.url({ protocol: /^https?$/, error: 'debe ser la URL del proyecto, como https://xxxx.supabase.co' }),
+    SUPABASE_SECRET_KEY: z.string({ error: 'es obligatoria (Project Settings → API Keys → Secret keys)' })
+      .trim()
+      .min(20, { error: 'no parece una clave secreta de Supabase' })
+      .refine((key) => !key.startsWith('sb_publishable_'), { error: 'debe ser la clave secreta, no la pública' }),
   })
   .superRefine((env, context) => {
     // En producción no se adivina el frontend: un CORS abierto por error expondría la API.
@@ -58,11 +67,13 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     const problems = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
     throw new ConfigError(`Configuración inválida. ${problems.join('; ')}`)
   }
-  const { NODE_ENV, PORT, ALLOWED_ORIGINS, LOG_LEVEL } = parsed.data
+  const { NODE_ENV, PORT, ALLOWED_ORIGINS, LOG_LEVEL, SUPABASE_URL, SUPABASE_SECRET_KEY } = parsed.data
   return {
     environment: NODE_ENV,
     port: PORT,
     allowedOrigins: ALLOWED_ORIGINS ?? [DEVELOPMENT_ORIGIN],
     logLevel: LOG_LEVEL,
+    supabaseUrl: SUPABASE_URL.replace(/\/$/, ''),
+    supabaseSecretKey: SUPABASE_SECRET_KEY,
   }
 }

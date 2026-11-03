@@ -4,7 +4,8 @@ import { createContainer } from './container.js'
 
 describe('ensamblado de la aplicación', () => {
   it('arma la API real lista para responder', async () => {
-    const { app, config } = createContainer({ PORT: '4000' }, { write: () => undefined })
+    const env = { PORT: '4000', SUPABASE_URL: 'https://test.supabase.co', SUPABASE_SECRET_KEY: 'sb_secret_valor-de-prueba-largo' }
+    const { app, config } = createContainer(env, { write: () => undefined })
 
     const response = await app.request('/api/v1/health')
 
