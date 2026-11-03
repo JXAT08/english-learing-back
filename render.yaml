@@ -1,0 +1,28 @@
+# Blueprint de Render para el backend de EnglishTech.
+# Los valores marcados con sync: false se escriben en el panel de Render,
+# nunca en este archivo.
+services:
+  - type: web
+    name: englishtech-api
+    runtime: node
+    plan: free
+    branch: main
+    # En Render /usr/bin es de solo lectura: corepack enable falla. corepack pnpm
+    # descarga la versión de packageManager sin tocar el sistema.
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm build
+    # node directo: recibe el SIGTERM de Render y cierra las peticiones en curso.
+    startCommand: node dist/server.js
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # La URL del proyecto no es secreta; la clave secreta sí.
+      - key: SUPABASE_URL
+        value: https://jerpgjfclvuzwxsdcyzi.supabase.co
+      - key: SUPABASE_SECRET_KEY
+        sync: false
