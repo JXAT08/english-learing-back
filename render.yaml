@@ -1,0 +1,20 @@
+# Blueprint de Render para el backend de EnglishTech.
+# Los valores marcados con sync: false se escriben en el panel de Render,
+# nunca en este archivo.
+services:
+  - type: web
+    name: englishtech-api
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: ALLOWED_ORIGINS
+        sync: false

@@ -3,7 +3,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['node_modules', '.vercel'] },
+  { ignores: ['node_modules', '.vercel', 'dist'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { files: ['**/*.ts'], languageOptions: { globals: { ...globals.node } } },

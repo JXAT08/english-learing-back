@@ -7,5 +7,5 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["api/**/*.ts"]
+  "include": ["api/**/*.ts", "src/**/*.ts"]
 }
