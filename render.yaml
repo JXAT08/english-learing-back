@@ -7,8 +7,11 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm start
+    # En Render /usr/bin es de solo lectura: corepack enable falla. corepack pnpm
+    # descarga la versión de packageManager sin tocar el sistema.
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm build
+    # node directo: recibe el SIGTERM de Render y cierra las peticiones en curso.
+    startCommand: node dist/server.js
     healthCheckPath: /api/v1/health
     autoDeploy: true
     envVars:
