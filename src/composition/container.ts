@@ -1,4 +1,5 @@
 import { createGetMyAccount, createUpdateMyPreferences, createUpdateMyProfile } from '../application/account.js'
+import { createDeleteMyAccount, createImportGuestProgress } from '../application/guestImport.js'
 import { createRecordActivity, createStudyWord } from '../application/practice.js'
 import { loadConfig } from '../config/config.js'
 import { createApp } from '../http/app.js'
@@ -6,6 +7,7 @@ import { createCachedCatalogRepository } from '../infrastructure/catalog/cachedC
 import { systemClock } from '../infrastructure/clock/systemClock.js'
 import { createJsonLogger } from '../infrastructure/logging/jsonLogger.js'
 import { createServerSupabaseClient } from '../infrastructure/supabase/serverClient.js'
+import { createSupabaseAccountDeleter } from '../infrastructure/supabase/supabaseAccountDeleter.js'
 import { createSupabaseAuthVerifier } from '../infrastructure/supabase/supabaseAuthVerifier.js'
 import { createSupabaseCatalogRepository } from '../infrastructure/supabase/supabaseCatalogRepository.js'
 import { createSupabasePracticeRepository } from '../infrastructure/supabase/supabasePracticeRepository.js'
@@ -37,6 +39,8 @@ export function createContainer(env: Record<string, string | undefined>, logOutp
       updateMyPreferences: createUpdateMyPreferences({ accounts }),
       recordActivity: createRecordActivity({ accounts, catalog, practice }),
       studyWord: createStudyWord({ accounts, catalog, practice }),
+      importGuestProgress: createImportGuestProgress({ accounts, catalog, practice }),
+      deleteMyAccount: createDeleteMyAccount({ deleter: createSupabaseAccountDeleter(supabase) }),
     },
   })
   return { config, logger, app }

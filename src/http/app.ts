@@ -11,6 +11,7 @@ import type { Clock } from '../ports/clock.js'
 import type { Logger } from '../ports/logger.js'
 import { errorBody } from './errors.js'
 import { requestLogger } from './middleware/requestLogger.js'
+import { accountLifecycleRoutes, type AccountLifecycleServices } from './routes/accountLifecycle.js'
 import { catalogRoutes } from './routes/catalog.js'
 import { healthRoutes } from './routes/health.js'
 import { meRoutes, type MeServices } from './routes/me.js'
@@ -18,7 +19,7 @@ import { practiceRoutes, type PracticeServices } from './routes/practice.js'
 import type { AppEnv } from './types.js'
 
 // Lo que la capa HTTP necesita: casos de uso y puertos, nunca Supabase directamente.
-export type AppServices = MeServices & PracticeServices & {
+export type AppServices = MeServices & PracticeServices & AccountLifecycleServices & {
   catalog: CatalogRepository
 }
 
@@ -55,6 +56,7 @@ export function createApp({ config, logger, clock, services }: AppDependencies) 
   app.route('/api/v1', catalogRoutes({ catalog: services.catalog }))
   app.route('/api/v1', meRoutes({ ...services, clock }))
   app.route('/api/v1', practiceRoutes({ ...services, clock }))
+  app.route('/api/v1', accountLifecycleRoutes({ ...services, clock }))
 
   app.notFound((context) => context.json(errorBody('not_found', 'La ruta solicitada no existe.', context.var.requestId), 404))
 

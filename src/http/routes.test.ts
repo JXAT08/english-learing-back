@@ -206,3 +206,68 @@ describe('partidas y palabras estudiadas', () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe('progreso de invitado y borrado de la cuenta', () => {
+  const guest = {
+    totalXp: 120,
+    currentStreak: 2,
+    bestStreak: 4,
+    lastPracticeDate: '2026-11-02',
+    studiedWordIds: ['web-browser', 'web-component'],
+    unlockedAchievementIds: ['first-step'],
+    avatarId: 'robot',
+  }
+
+  it('importa el progreso de invitado y devuelve la cuenta actualizada', async () => {
+    const { asAna } = setup()
+
+    const response = await asAna('/api/v1/me/import', { method: 'POST', body: JSON.stringify(guest), headers: { 'X-Client-Date': '2026-11-03' } })
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.result).toMatchObject({ imported: true, importedXp: 120, importedWords: 2 })
+    expect(body.account.progress).toMatchObject({ totalXp: 120, currentStreak: 2 })
+    expect(body.account.profile.avatarId).toBe('robot')
+  })
+
+  it.each([
+    ['con XP negativa', { ...guest, totalXp: -5 }],
+    ['con una fecha mal escrita', { ...guest, lastPracticeDate: '03/11/2026' }],
+    ['con demasiadas palabras', { ...guest, studiedWordIds: Array.from({ length: 201 }, (_, index) => `w${index}`) }],
+    ['sin los campos obligatorios', { totalXp: 10 }],
+  ])('rechaza un progreso de invitado %s', async (_case, body) => {
+    const { asAna } = setup()
+
+    const response = await asAna('/api/v1/me/import', { method: 'POST', body: JSON.stringify(body) })
+
+    expect(response.status).toBe(400)
+  })
+
+  it('no borra la cuenta sin confirmación explícita', async () => {
+    const { asAna, services } = setup()
+
+    const response = await asAna('/api/v1/me', { method: 'DELETE', body: JSON.stringify({}) })
+
+    expect(response.status).toBe(400)
+    expect(services.deletedAccounts).toEqual([])
+  })
+
+  it('borra la cuenta con confirmación y responde 204', async () => {
+    const { asAna, services } = setup()
+    await asAna('/api/v1/me')
+
+    const response = await asAna('/api/v1/me', { method: 'DELETE', body: JSON.stringify({ confirm: true }) })
+
+    expect(response.status).toBe(204)
+    expect(services.deletedAccounts).toEqual([ANA_ID])
+    expect(services.accounts.accounts.has(ANA_ID)).toBe(false)
+  })
+
+  it('exige sesión para borrar la cuenta', async () => {
+    const { app } = setup()
+
+    const response = await app.request('/api/v1/me', { method: 'DELETE', body: JSON.stringify({ confirm: true }) })
+
+    expect(response.status).toBe(401)
+  })
+})

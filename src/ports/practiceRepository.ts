@@ -11,7 +11,8 @@ export type PracticeSnapshot = {
   sessionsToday: number
 }
 
-export type StudySource = 'resources' | 'practice'
+// Coincide con el check de studied_words.source en la base.
+export type StudySource = 'resources' | 'practice' | 'guest-import'
 
 export type PracticeAnswer = { wordId?: string; turnId?: string; correct: boolean; score?: number }
 
