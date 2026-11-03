@@ -1,5 +1,13 @@
 import type { Level } from './catalog.js'
 
+// Progreso guardado de un estudiante.
+export type StudentProgress = {
+  totalXp: number
+  currentStreak: number
+  bestStreak: number
+  lastPracticeDate: string | null
+}
+
 export type LevelStanding = {
   level: number
   name: string

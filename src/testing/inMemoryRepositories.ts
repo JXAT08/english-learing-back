@@ -1,9 +1,15 @@
-import type { Catalog } from '../domain/catalog.js'
+import type { Catalog, Word } from '../domain/catalog.js'
 import { DEFAULT_PREFERENCES } from '../domain/preferences.js'
 import type { CatalogRepository } from '../ports/catalogRepository.js'
 import type { StudentAccount, StudentAccountRepository } from '../ports/studentAccountRepository.js'
 
 // Implementaciones en memoria de los puertos, solo para pruebas.
+
+const testWord = (id: string, term: string): Word => ({
+  id, term, translation: term, definition: `${term} definition.`, definitionEs: `Definición de ${term}.`,
+  example: `The ${term} example.`, pronunciationPhrase: `The ${term} example.`, pronunciationHint: null, difficulty: 'beginner',
+  synonyms: [`${term} synonym`], antonyms: [], keywords: [term.toLowerCase()],
+})
 
 export const testCatalog: Catalog = {
   categories: [{
@@ -12,25 +18,45 @@ export const testCatalog: Catalog = {
     description: 'Conceptos web.',
     icon: 'code',
     tone: 'violet',
-    words: [{
-      id: 'web-browser', term: 'Browser', translation: 'Navegador', definition: 'A program used to access and display websites.',
-      definitionEs: 'Programa para mostrar sitios web.', example: 'The browser displays the new website.',
-      pronunciationPhrase: 'The browser displays the new website.', pronunciationHint: 'brau-ser', difficulty: 'beginner',
-      synonyms: ['web browser'], antonyms: [], keywords: ['program', 'website', 'display'],
-    }],
+    words: [
+      {
+        id: 'web-browser', term: 'Browser', translation: 'Navegador', definition: 'A program used to access and display websites.',
+        definitionEs: 'Programa para mostrar sitios web.', example: 'The browser displays the new website.',
+        pronunciationPhrase: 'The browser displays the new website.', pronunciationHint: 'brau-ser', difficulty: 'beginner',
+        synonyms: ['web browser'], antonyms: [], keywords: ['program', 'website', 'display'],
+      },
+      testWord('web-component', 'Component'),
+      testWord('web-deploy', 'Deploy'),
+      testWord('web-link', 'Link'),
+      testWord('web-route', 'Route'),
+      testWord('web-cache', 'Cache'),
+    ],
   }],
-  conversationScenarios: [],
+  conversationScenarios: [{
+    id: 'daily-standup',
+    title: 'Daily development stand-up',
+    description: 'Practica una reunión diaria.',
+    turns: [{ id: 'standup-task', botMessage: 'What task are you working on?', criteria: ['working', 'task'], alternatives: {}, suggestion: 'Try: I am working on the task.' }],
+  }],
   levels: [
     { level: 1, name: 'Principiante', minimumXp: 0 },
     { level: 2, name: 'Aprendiz', minimumXp: 100 },
   ],
-  achievements: [{ id: 'first-step', name: 'Primer paso', description: 'Obtén tu primera recompensa.' }],
+  achievements: [
+    { id: 'first-step', name: 'Primer paso', description: 'Obtén tu primera recompensa.' },
+    { id: 'five-words', name: 'Explorador de palabras', description: 'Estudia 5 palabras únicas.' },
+    { id: 'first-game', name: 'Primera partida', description: 'Completa tu primera partida.' },
+  ],
   avatars: [
     { id: 'default-student', label: 'Estudiante', tone: 'violet' },
     { id: 'robot', label: 'Robot', tone: 'rose' },
   ],
   dailyTips: ['Practica en voz alta.'],
-  activityRules: [{ activity: 'definition', baseXp: 25, dailyRewardLimit: 3 }],
+  activityRules: [
+    { activity: 'word-study', baseXp: 10, dailyRewardLimit: null },
+    { activity: 'definition', baseXp: 25, dailyRewardLimit: 3 },
+    { activity: 'conversation', baseXp: 30, dailyRewardLimit: 3 },
+  ],
 }
 
 export function createInMemoryCatalogRepository(catalog: Catalog = testCatalog): CatalogRepository & { reads: number } {

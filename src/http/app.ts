@@ -14,10 +14,11 @@ import { requestLogger } from './middleware/requestLogger.js'
 import { catalogRoutes } from './routes/catalog.js'
 import { healthRoutes } from './routes/health.js'
 import { meRoutes, type MeServices } from './routes/me.js'
+import { practiceRoutes, type PracticeServices } from './routes/practice.js'
 import type { AppEnv } from './types.js'
 
 // Lo que la capa HTTP necesita: casos de uso y puertos, nunca Supabase directamente.
-export type AppServices = MeServices & {
+export type AppServices = MeServices & PracticeServices & {
   catalog: CatalogRepository
 }
 
@@ -53,6 +54,7 @@ export function createApp({ config, logger, clock, services }: AppDependencies) 
   app.route('/api/v1', healthRoutes({ clock }))
   app.route('/api/v1', catalogRoutes({ catalog: services.catalog }))
   app.route('/api/v1', meRoutes({ ...services, clock }))
+  app.route('/api/v1', practiceRoutes({ ...services, clock }))
 
   app.notFound((context) => context.json(errorBody('not_found', 'La ruta solicitada no existe.', context.var.requestId), 404))
 

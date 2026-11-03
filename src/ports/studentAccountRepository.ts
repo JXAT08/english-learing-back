@@ -1,12 +1,8 @@
 import type { Preferences } from '../domain/preferences.js'
 import type { Profile } from '../domain/profile.js'
+import type { StudentProgress } from '../domain/progress.js'
 
-export type StudentProgress = {
-  totalXp: number
-  currentStreak: number
-  bestStreak: number
-  lastPracticeDate: string | null
-}
+export type { StudentProgress }
 
 export type UnlockedAchievement = { id: string; unlockedAt: string }
 

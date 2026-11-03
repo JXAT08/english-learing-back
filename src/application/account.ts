@@ -24,7 +24,7 @@ export type AccountView = {
 }
 
 // La primera petición de un estudiante crea su cuenta con el nombre de Google.
-async function ensureAccount(accounts: StudentAccountRepository, user: AuthenticatedUser): Promise<StudentAccount> {
+export async function ensureAccount(accounts: StudentAccountRepository, user: AuthenticatedUser): Promise<StudentAccount> {
   return (await accounts.findAccount(user.id))
     ?? accounts.createAccount(user.id, { displayName: initialDisplayName(user.name), avatarId: DEFAULT_AVATAR_ID })
 }

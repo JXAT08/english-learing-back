@@ -1,6 +1,8 @@
 import { createGetMyAccount, createUpdateMyPreferences, createUpdateMyProfile } from '../application/account.js'
+import { createRecordActivity, createStudyWord } from '../application/practice.js'
 import type { AppServices } from '../http/app.js'
 import type { AuthVerifier } from '../ports/authVerifier.js'
+import { createInMemoryPracticeRepository } from './inMemoryPracticeRepository.js'
 import { createInMemoryAccountRepository, createInMemoryCatalogRepository } from './inMemoryRepositories.js'
 
 export const ANA_TOKEN = 'token-de-ana'
@@ -16,6 +18,7 @@ export const fakeAuthVerifier: AuthVerifier = {
 export function createTestServices(): AppServices & { accounts: ReturnType<typeof createInMemoryAccountRepository> } {
   const accounts = createInMemoryAccountRepository()
   const catalog = createInMemoryCatalogRepository()
+  const practice = createInMemoryPracticeRepository(accounts)
   return {
     accounts,
     authVerifier: fakeAuthVerifier,
@@ -23,5 +26,7 @@ export function createTestServices(): AppServices & { accounts: ReturnType<typeo
     getMyAccount: createGetMyAccount({ accounts, catalog }),
     updateMyProfile: createUpdateMyProfile({ accounts, catalog }),
     updateMyPreferences: createUpdateMyPreferences({ accounts }),
+    recordActivity: createRecordActivity({ accounts, catalog, practice }),
+    studyWord: createStudyWord({ accounts, catalog, practice }),
   }
 }

@@ -130,3 +130,79 @@ describe('perfil y preferencias', () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe('partidas y palabras estudiadas', () => {
+  const game = {
+    eventId: 'definition-1730000000000',
+    activity: 'definition',
+    answers: [
+      { wordId: 'web-browser', correct: true, score: 100 },
+      { wordId: 'web-component', correct: true, score: 100 },
+      { wordId: 'web-deploy', correct: true, score: 100 },
+    ],
+  }
+  const post = (asAna: ReturnType<typeof setup>['asAna'], path: string, body?: unknown) =>
+    asAna(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body), headers: { 'X-Client-Date': '2026-11-03' } })
+
+  it('registra una partida y devuelve la recompensa con la cuenta actualizada', async () => {
+    const { asAna } = setup()
+
+    const response = await post(asAna, '/api/v1/me/activities', game)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.reward).toEqual({ xpAwarded: 25, dailyLimitReached: false, newAchievements: ['first-step', 'first-game'], duplicate: false })
+    expect(body.account.progress).toMatchObject({ totalXp: 25, currentStreak: 1, lastPracticeDate: '2026-11-03' })
+    expect(body.account.studiedWordIds).toEqual(['web-browser', 'web-component', 'web-deploy'])
+  })
+
+  it('un reintento de la misma partida responde igual sin sumar otra vez', async () => {
+    const { asAna } = setup()
+    await post(asAna, '/api/v1/me/activities', game)
+
+    const body = await (await post(asAna, '/api/v1/me/activities', game)).json()
+
+    expect(body.reward.duplicate).toBe(true)
+    expect(body.account.progress.totalXp).toBe(25)
+  })
+
+  it.each([
+    ['sin respuestas', { ...game, answers: [] }],
+    ['con más de 20 respuestas', { ...game, answers: Array.from({ length: 21 }, () => ({ correct: true })) }],
+    ['con una puntuación mayor a 100', { ...game, answers: [{ correct: true, score: 150 }] }],
+    ['con un eventId con caracteres raros', { ...game, eventId: 'hola mundo<script>' }],
+    ['con una actividad desconocida', { ...game, activity: 'ajedrez' }],
+  ])('rechaza una partida %s con 400', async (_case, body) => {
+    const { asAna } = setup()
+
+    const response = await post(asAna, '/api/v1/me/activities', body)
+
+    expect(response.status).toBe(400)
+    expect((await response.json()).error.code).toBe('validation_error')
+  })
+
+  it('marca una palabra en Recursos con 10 XP', async () => {
+    const { asAna } = setup()
+
+    const body = await (await post(asAna, '/api/v1/me/words/web-link/study')).json()
+
+    expect(body.reward.xpAwarded).toBe(10)
+    expect(body.account.studiedWordIds).toEqual(['web-link'])
+  })
+
+  it('responde 404 al marcar una palabra que no existe', async () => {
+    const { asAna } = setup()
+
+    const response = await post(asAna, '/api/v1/me/words/inventada/study')
+
+    expect(response.status).toBe(404)
+  })
+
+  it('exige sesión para registrar partidas', async () => {
+    const { app } = setup()
+
+    const response = await app.request('/api/v1/me/activities', { method: 'POST', body: JSON.stringify(game) })
+
+    expect(response.status).toBe(401)
+  })
+})

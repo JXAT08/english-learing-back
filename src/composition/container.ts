@@ -1,4 +1,5 @@
 import { createGetMyAccount, createUpdateMyPreferences, createUpdateMyProfile } from '../application/account.js'
+import { createRecordActivity, createStudyWord } from '../application/practice.js'
 import { loadConfig } from '../config/config.js'
 import { createApp } from '../http/app.js'
 import { createCachedCatalogRepository } from '../infrastructure/catalog/cachedCatalogRepository.js'
@@ -7,6 +8,7 @@ import { createJsonLogger } from '../infrastructure/logging/jsonLogger.js'
 import { createServerSupabaseClient } from '../infrastructure/supabase/serverClient.js'
 import { createSupabaseAuthVerifier } from '../infrastructure/supabase/supabaseAuthVerifier.js'
 import { createSupabaseCatalogRepository } from '../infrastructure/supabase/supabaseCatalogRepository.js'
+import { createSupabasePracticeRepository } from '../infrastructure/supabase/supabasePracticeRepository.js'
 import { createSupabaseStudentAccountRepository } from '../infrastructure/supabase/supabaseStudentAccountRepository.js'
 
 const CATALOG_CACHE_MS = 5 * 60 * 1000
@@ -21,6 +23,7 @@ export function createContainer(env: Record<string, string | undefined>, logOutp
   const supabase = createServerSupabaseClient(config.supabaseUrl, config.supabaseSecretKey)
   const catalog = createCachedCatalogRepository(createSupabaseCatalogRepository(supabase), { ttlMs: CATALOG_CACHE_MS })
   const accounts = createSupabaseStudentAccountRepository(supabase)
+  const practice = createSupabasePracticeRepository(supabase)
 
   const app = createApp({
     config,
@@ -32,6 +35,8 @@ export function createContainer(env: Record<string, string | undefined>, logOutp
       getMyAccount: createGetMyAccount({ accounts, catalog }),
       updateMyProfile: createUpdateMyProfile({ accounts, catalog }),
       updateMyPreferences: createUpdateMyPreferences({ accounts }),
+      recordActivity: createRecordActivity({ accounts, catalog, practice }),
+      studyWord: createStudyWord({ accounts, catalog, practice }),
     },
   })
   return { config, logger, app }
