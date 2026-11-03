@@ -18,3 +18,8 @@ services:
         value: info
       - key: ALLOWED_ORIGINS
         sync: false
+      # La URL del proyecto no es secreta; la clave secreta sí.
+      - key: SUPABASE_URL
+        value: https://jerpgjfclvuzwxsdcyzi.supabase.co
+      - key: SUPABASE_SECRET_KEY
+        sync: false
